@@ -138,11 +138,52 @@ export function ChatView({
               </div>
             </div>
           ) : (
-            // Messages
+            // Messages — group adjacent text + image from same sender into one bubble
             <>
-              {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
-              ))}
+              {messages.map((message, idx) => {
+                const next = messages[idx + 1];
+                const prev = messages[idx - 1];
+
+                const isImageOnly = message.has_attachment
+                  && message.attachment_url
+                  && (message.attachment_type === 'image' || message.attachment_type === 'sticker')
+                  && (!message.content || message.content.startsWith('['));
+
+                const prevIsTextFromSameSender =
+                  prev
+                  && prev.direction === message.direction
+                  && prev.sender_id === message.sender_id
+                  && !prev.has_attachment
+                  && prev.content
+                  && !prev.content.startsWith('[');
+
+                // Hide standalone image bubble when it was already merged into the previous text bubble
+                if (isImageOnly && prevIsTextFromSameSender) {
+                  return null;
+                }
+
+                // Check if the NEXT message is an image-only from same sender that should be merged here
+                const nextIsImageFromSameSender =
+                  next
+                  && next.direction === message.direction
+                  && next.sender_id === message.sender_id
+                  && next.has_attachment
+                  && next.attachment_url
+                  && (next.attachment_type === 'image' || next.attachment_type === 'sticker')
+                  && (!next.content || next.content.startsWith('['));
+
+                const mergedAttachment = nextIsImageFromSameSender
+                  ? { url: next.attachment_url!, type: next.attachment_type! }
+                  : undefined;
+
+                return (
+                  <MessageBubble
+                    key={message.id}
+                    message={message}
+                    mergedAttachment={mergedAttachment}
+                  />
+                );
+              })}
               <div ref={messagesEndRef} />
             </>
           )}

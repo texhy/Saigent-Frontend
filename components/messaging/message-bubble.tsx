@@ -7,9 +7,10 @@ import type { Message } from '@/types';
 
 interface MessageBubbleProps {
   message: Message;
+  mergedAttachment?: { url: string; type: string };
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, mergedAttachment }: MessageBubbleProps) {
   const isInbound = message.direction === 'inbound';
   const messageType = message.message_type;
   
@@ -60,7 +61,32 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       {/* Message Content */}
       <div className={cn('max-w-[70%] flex flex-col', isInbound ? 'items-start' : 'items-end')}>
         <div className={cn('rounded-2xl px-4 py-2', style.bubble)}>
-          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+          {message.content && !message.content.startsWith('[') && (
+            <p className={cn('text-sm whitespace-pre-wrap break-words', (message.has_attachment || mergedAttachment) ? 'mb-2' : '')}>
+              {message.content}
+            </p>
+          )}
+          {(message.has_attachment && message.attachment_url && (message.attachment_type === 'image' || message.attachment_type === 'sticker')) && (
+            <div>
+              <img
+                src={message.attachment_url}
+                alt="Attachment"
+                className="rounded-lg max-h-64 object-contain"
+              />
+            </div>
+          )}
+          {mergedAttachment && (
+            <div>
+              <img
+                src={mergedAttachment.url}
+                alt="Attachment"
+                className="rounded-lg max-h-64 object-contain"
+              />
+            </div>
+          )}
+          {!message.content && !message.has_attachment && !mergedAttachment && (
+            <p className="text-sm">{'\u00A0'}</p>
+          )}
         </div>
         
         {/* Metadata */}

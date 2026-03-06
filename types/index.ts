@@ -82,6 +82,9 @@ export interface Message {
   content: string;
   sender_id: string;
   sender_name: string;
+  has_attachment?: boolean;
+  attachment_type?: string | null;
+  attachment_url?: string | null;
   is_ai_generated: boolean;
   ai_intent?: string;
   ai_confidence?: number;
@@ -176,6 +179,9 @@ export interface InboundMessagePreview {
   content: string;
   sender_name: string;
   created_at: string;
+  has_attachment?: boolean;
+  attachment_type?: string | null;
+  attachment_url?: string | null;
 }
 
 // Full draft (with all debug info)

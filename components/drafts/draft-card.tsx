@@ -143,6 +143,15 @@ export function DraftCard({ draft, onApprove, onReject }: DraftCardProps) {
                     {formatDate(inbound_message_preview.created_at)}
                   </span>
                 </div>
+                {inbound_message_preview.has_attachment && inbound_message_preview.attachment_url && (inbound_message_preview.attachment_type === 'image' || inbound_message_preview.attachment_type === 'sticker') && (
+                  <div className="mb-2">
+                    <img
+                      src={inbound_message_preview.attachment_url}
+                      alt="Customer attachment"
+                      className="rounded-lg max-h-48 object-contain border border-border"
+                    />
+                  </div>
+                )}
                 <p className="text-sm text-foreground/90 whitespace-pre-wrap">
                   {inbound_message_preview.content}
                 </p>
