@@ -462,7 +462,7 @@ export default function KnowledgeSetupPage() {
 
         {/* Navigation */}
         <div className="flex justify-between">
-          <Button variant="outline" onClick={() => router.push('/')}>
+          <Button variant="outline" onClick={() => router.push('/channels')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Channels
           </Button>

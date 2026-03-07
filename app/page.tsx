@@ -1,144 +1,27 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { ArrowRight, Zap, Loader2, ShoppingBag, Store, CheckCircle, AlertCircle } from 'lucide-react';
+import { Suspense, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Zap, UserPlus, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChannelCard } from '@/components/connectors/channel-card';
-import { useSession } from '@/hooks/use-session';
-import { useChannels } from '@/hooks/use-channels';
-import { useShopify } from '@/hooks/use-shopify';
-import { useToast } from '@/hooks/use-toast';
-import { BRAND } from '@/lib/constants';
+import { BRAND, ROUTES } from '@/lib/constants';
 
-function ConnectorPageContent() {
+function WelcomeContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const { toast } = useToast();
-  const { session, loading: sessionLoading } = useSession();
-  const {
-    loading: channelsLoading,
-    getChannelStatus,
-    connectChannel,
-    disconnectChannel,
-    hasAnyConnection,
-    refresh,
-  } = useChannels();
-  const {
-    connected: shopifyConnected,
-    shopDomain,
-    shopName,
-    loading: shopifyLoading,
-    connect: connectShopify,
-    disconnect: disconnectShopify,
-    refresh: refreshShopify,
-  } = useShopify();
 
-  const [disconnecting, setDisconnecting] = useState<number | null>(null);
-  const [shopifyDisconnecting, setShopifyDisconnecting] = useState(false);
-  const [shopDomainInput, setShopDomainInput] = useState('');
-  const [oauthHandled, setOauthHandled] = useState(false);
-
-  // Handle OAuth callback
+  // If user lands on / with OAuth callback params, send them to channels to handle it
   useEffect(() => {
-    if (oauthHandled) return;
-    
-    const instagramConnected = searchParams.get('instagram_connected') === 'true';
-    const messengerConnected = searchParams.get('messenger_connected') === 'true';
-    const shopifyConnectedParam = searchParams.get('shopify_connected') === 'true';
-    
-    if (instagramConnected) {
-      toast({
-        title: 'Instagram Connected!',
-        description: 'Your Instagram account has been successfully connected.',
-      });
-      refresh();
-      setOauthHandled(true);
-      window.history.replaceState({}, '', '/');
+    const instagram = searchParams.get('instagram_connected');
+    const messenger = searchParams.get('messenger_connected');
+    const shopify = searchParams.get('shopify_connected');
+    if (instagram || messenger || shopify) {
+      const params = new URLSearchParams(searchParams.toString());
+      router.replace(`${ROUTES.channels}?${params.toString()}`);
     }
-    
-    if (messengerConnected) {
-      toast({
-        title: 'Messenger Connected!',
-        description: 'Your Facebook Page has been successfully connected.',
-      });
-      refresh();
-      setOauthHandled(true);
-      window.history.replaceState({}, '', '/');
-    }
-
-    if (shopifyConnectedParam) {
-      toast({
-        title: 'Shopify Connected!',
-        description: 'Your Shopify store has been successfully connected.',
-      });
-      refreshShopify();
-      setOauthHandled(true);
-      window.history.replaceState({}, '', '/');
-    }
-  }, [searchParams, refresh, refreshShopify, toast, oauthHandled]);
-
-  const handleDisconnect = async (accountId: number) => {
-    try {
-      setDisconnecting(accountId);
-      await disconnectChannel(accountId);
-      toast({
-        title: 'Disconnected',
-        description: 'Channel has been disconnected.',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to disconnect channel.',
-        variant: 'destructive',
-      });
-    } finally {
-      setDisconnecting(null);
-    }
-  };
-
-  const handleShopifyDisconnect = async () => {
-    if (!shopDomain) return;
-    try {
-      setShopifyDisconnecting(true);
-      await disconnectShopify(shopDomain);
-      toast({
-        title: 'Disconnected',
-        description: 'Shopify store has been disconnected.',
-      });
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to disconnect Shopify store.',
-        variant: 'destructive',
-      });
-    } finally {
-      setShopifyDisconnecting(false);
-    }
-  };
-
-  const handleShopifyConnect = () => {
-    const domain = shopDomainInput.trim();
-    if (!domain) {
-      toast({
-        title: 'Enter shop domain',
-        description: 'Please enter your Shopify store domain (e.g. my-store.myshopify.com)',
-        variant: 'destructive',
-      });
-      return;
-    }
-    connectShopify(domain);
-  };
-
-  const handleContinue = () => {
-    window.location.href = '/setup/knowledge';
-  };
-
-  const isLoading = sessionLoading || channelsLoading;
-  const instagramStatus = getChannelStatus('instagram');
-  const messengerStatus = getChannelStatus('messenger');
+  }, [searchParams, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -151,226 +34,76 @@ function ConnectorPageContent() {
             </div>
             <span className="font-semibold text-lg">{BRAND.name}</span>
           </div>
-          {session && (
-            <Badge variant="outline" className="text-xs hidden sm:flex">
-              Session active
-            </Badge>
-          )}
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-12 max-w-4xl">
-        {/* Hero Section */}
+      <main className="container mx-auto px-4 py-12 max-w-2xl">
         <div className="text-center mb-12 animate-fadeIn">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Connect Your Channels
+            Welcome to {BRAND.name}
           </h1>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Connect your social media channels to start automating customer conversations with AI.
+          <p className="mt-4 text-lg text-muted-foreground">
+            Get started by registering your business or signing in to your account.
           </p>
         </div>
 
-        {/* Step Indicator */}
-        <div className="flex items-center justify-center gap-2 mb-12">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-medium">
-              1
-            </div>
-            <span className="text-sm font-medium">Channels</span>
-          </div>
-          <div className="w-8 sm:w-12 h-px bg-slate-200" />
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-sm font-medium">
-              2
-            </div>
-            <span className="text-sm text-muted-foreground">Knowledge</span>
-          </div>
-          <div className="w-8 sm:w-12 h-px bg-slate-200" />
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-sm font-medium">
-              3
-            </div>
-            <span className="text-sm text-muted-foreground">Dashboard</span>
-          </div>
+        <div className="grid sm:grid-cols-2 gap-6 animate-slideUp">
+          <Link href={ROUTES.register}>
+            <Card className="relative overflow-hidden h-full transition-all duration-200 hover:shadow-md hover:ring-2 hover:ring-blue-500/20 cursor-pointer border-2 border-transparent hover:border-blue-200">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-blue-500" />
+              <CardHeader className="pb-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 mb-2">
+                  <UserPlus className="h-6 w-6 text-blue-600" />
+                </div>
+                <CardTitle className="text-lg">Register</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Create an account. Choose Ecommerce (Shopify) or Service-based business and enter your details.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full bg-blue-500 hover:bg-blue-600" size="lg">
+                  Register
+                  <UserPlus className="ml-2 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href={ROUTES.login}>
+            <Card className="relative overflow-hidden h-full transition-all duration-200 hover:shadow-md hover:ring-2 hover:ring-slate-500/20 cursor-pointer border-2 border-transparent hover:border-slate-200">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-slate-500" />
+              <CardHeader className="pb-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 mb-2">
+                  <LogIn className="h-6 w-6 text-slate-600" />
+                </div>
+                <CardTitle className="text-lg">Log in</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Already have an account? Sign in with your business type and password to continue.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button variant="outline" className="w-full" size="lg">
+                  Log in
+                  <LogIn className="ml-2 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
-
-        {/* Loading State */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          </div>
-        ) : (
-          <>
-            {/* Channel Cards */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 animate-slideUp">
-              <ChannelCard
-                platform="instagram"
-                status={instagramStatus}
-                onConnect={() => connectChannel('instagram')}
-                onDisconnect={() => {
-                  if (instagramStatus.account) {
-                    handleDisconnect(instagramStatus.account.id);
-                  }
-                }}
-                loading={disconnecting === instagramStatus.account?.id}
-              />
-              <ChannelCard
-                platform="messenger"
-                status={messengerStatus}
-                onConnect={() => connectChannel('messenger')}
-                onDisconnect={() => {
-                  if (messengerStatus.account) {
-                    handleDisconnect(messengerStatus.account.id);
-                  }
-                }}
-                loading={disconnecting === messengerStatus.account?.id}
-              />
-
-              {/* Shopify Connector Card */}
-              <Card
-                className={`relative overflow-hidden transition-all duration-200 ${
-                  shopifyConnected ? 'ring-2 ring-emerald-500/20 border-emerald-200' : ''
-                }`}
-              >
-                <div
-                  className="absolute top-0 left-0 right-0 h-1"
-                  style={{ backgroundColor: '#96BF48' }}
-                />
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-                        shopifyConnected ? 'bg-emerald-50' : 'bg-slate-100'
-                      }`}
-                    >
-                      <Store
-                        className="h-6 w-6"
-                        style={{ color: shopifyConnected ? '#96BF48' : '#64748b' }}
-                      />
-                    </div>
-                    <Badge
-                      variant={shopifyConnected ? 'success' : 'secondary'}
-                      className="font-medium"
-                    >
-                      {shopifyConnected ? (
-                        <>
-                          <CheckCircle className="mr-1 h-3 w-3" />
-                          Connected
-                        </>
-                      ) : (
-                        <>
-                          <AlertCircle className="mr-1 h-3 w-3" />
-                          Not connected
-                        </>
-                      )}
-                    </Badge>
-                  </div>
-                  <CardTitle className="mt-4 text-lg">Shopify</CardTitle>
-                  <CardDescription className="text-sm text-muted-foreground">
-                    Connect your Shopify store to create orders and send checkout links via chat.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {shopifyConnected ? (
-                    <>
-                      <div className="mb-4 rounded-lg bg-slate-50 p-3">
-                        <p className="text-xs text-muted-foreground">Connected store</p>
-                        <p className="font-medium text-sm">{shopName || shopDomain}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{shopDomain}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={handleShopifyDisconnect}
-                          disabled={shopifyDisconnecting}
-                        >
-                          {shopifyDisconnecting ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            'Disconnect'
-                          )}
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="space-y-3">
-                      <Input
-                        placeholder="my-store.myshopify.com"
-                        value={shopDomainInput}
-                        onChange={(e) => setShopDomainInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleShopifyConnect()}
-                      />
-                      <Button
-                        className="w-full"
-                        style={{ backgroundColor: '#96BF48' }}
-                        onClick={handleShopifyConnect}
-                        disabled={shopifyLoading}
-                      >
-                        {shopifyLoading ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <ShoppingBag className="mr-2 h-4 w-4" />
-                        )}
-                        Connect Shopify
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Continue Button */}
-            <div className="flex justify-center">
-              <Button
-                size="lg"
-                disabled={!hasAnyConnection && !shopifyConnected}
-                onClick={handleContinue}
-                className="px-8"
-              >
-                Continue to Knowledge Setup
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-
-            {!hasAnyConnection && !shopifyConnected && (
-              <p className="text-center text-sm text-muted-foreground mt-4">
-                Connect at least one channel to continue
-              </p>
-            )}
-          </>
-        )}
-
-        {/* Connection Summary */}
-        {hasAnyConnection && (
-          <div className="mt-12 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
-            <div className="flex items-center gap-2 text-emerald-700">
-              <div className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="text-sm font-medium">
-                {session?.connected_channels_count || 0} channel(s) connected
-              </span>
-            </div>
-            <p className="text-sm text-emerald-600 mt-1">
-              You can proceed to set up your knowledge base for AI responses.
-            </p>
-          </div>
-        )}
       </main>
     </div>
   );
 }
 
-// Wrap with Suspense for useSearchParams
-export default function ConnectorPage() {
+export default function WelcomePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
+        <div className="h-8 w-8 animate-pulse rounded-lg bg-blue-500/20" />
       </div>
     }>
-      <ConnectorPageContent />
+      <WelcomeContent />
     </Suspense>
   );
 }

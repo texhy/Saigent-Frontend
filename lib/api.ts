@@ -72,6 +72,32 @@ class ApiClient {
     return this.request<Session>('/connectors/session/init/', { method: 'POST' });
   }
 
+  // ============ Auth (register / login) ============
+  /**
+   * Register a new user/business. Call this from the frontend to persist to the database.
+   * Backend path may vary; set NEXT_PUBLIC_AUTH_REGISTER_URL (e.g. /auth/register/) if different.
+   */
+  async register(params: {
+    email: string;
+    password: string;
+    business_type: 'ecommerce' | 'service';
+    business_name: string;
+    shop_domain?: string;
+  }): Promise<{ message?: string; id?: number }> {
+    const path = process.env.NEXT_PUBLIC_AUTH_REGISTER_URL || '/auth/register/';
+    const body = {
+      email: params.email,
+      password: params.password,
+      business_type: params.business_type,
+      business_name: params.business_name,
+      ...(params.shop_domain && { shopify_store_domain: params.shop_domain }),
+    };
+    return this.request(path, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }).then((res) => res as { message?: string; id?: number });
+  }
+
   // ============ Connectors ============
   async getConnectedAccounts(): Promise<{ accounts: ConnectedAccount[] }> {
     return this.request<{ accounts: ConnectedAccount[] }>('/connectors/accounts/');

@@ -24,7 +24,7 @@ export function Topbar() {
             Inbox
           </Button>
         </Link>
-        <Link href="/">
+        <Link href="/channels">
           <Button variant="ghost" size="sm">
             Channels
           </Button>

@@ -50,6 +50,9 @@ export const FILE_UPLOAD = {
 
 export const ROUTES = {
   home: '/',
+  channels: '/channels',
+  register: '/register',
+  login: '/login',
   knowledge: '/setup/knowledge',
   dashboard: '/dashboard',
 } as const;
