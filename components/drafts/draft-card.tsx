@@ -22,7 +22,8 @@ import {
   Instagram,
   MessageCircle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Mic
 } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
 import { CHANNELS } from '@/lib/constants';
@@ -150,6 +151,22 @@ export function DraftCard({ draft, onApprove, onReject }: DraftCardProps) {
                       alt="Customer attachment"
                       className="rounded-lg max-h-48 object-contain border border-border"
                     />
+                  </div>
+                )}
+                {inbound_message_preview.has_attachment && inbound_message_preview.attachment_type === 'audio' && (
+                  <div className="mb-2 space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Mic className="h-3.5 w-3.5" />
+                      <span>Voice message</span>
+                    </div>
+                    {inbound_message_preview.attachment_url && (
+                      <audio
+                        controls
+                        src={inbound_message_preview.attachment_url}
+                        className="max-w-full h-8"
+                        preload="metadata"
+                      />
+                    )}
                   </div>
                 )}
                 <p className="text-sm text-foreground/90 whitespace-pre-wrap">

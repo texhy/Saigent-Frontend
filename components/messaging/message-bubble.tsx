@@ -1,6 +1,6 @@
 'use client';
 
-import { Bot, User, Headphones, Clock } from 'lucide-react';
+import { Bot, User, Headphones, Clock, Mic } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatTime } from '@/lib/utils';
 import type { Message } from '@/types';
@@ -61,10 +61,26 @@ export function MessageBubble({ message, mergedAttachment }: MessageBubbleProps)
       {/* Message Content */}
       <div className={cn('max-w-[70%] flex flex-col', isInbound ? 'items-start' : 'items-end')}>
         <div className={cn('rounded-2xl px-4 py-2', style.bubble)}>
+          {message.has_attachment && message.attachment_type === 'audio' && (
+            <div className="flex items-center gap-2 mb-1">
+              <Mic className="h-3.5 w-3.5 opacity-60 shrink-0" />
+              <span className="text-xs opacity-70">Voice message</span>
+            </div>
+          )}
           {message.content && !message.content.startsWith('[') && (
             <p className={cn('text-sm whitespace-pre-wrap break-words', (message.has_attachment || mergedAttachment) ? 'mb-2' : '')}>
               {message.content}
             </p>
+          )}
+          {message.has_attachment && message.attachment_url && message.attachment_type === 'audio' && (
+            <div>
+              <audio
+                controls
+                src={message.attachment_url}
+                className="max-w-full h-8"
+                preload="metadata"
+              />
+            </div>
           )}
           {(message.has_attachment && message.attachment_url && (message.attachment_type === 'image' || message.attachment_type === 'sticker')) && (
             <div>
